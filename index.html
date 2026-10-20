@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HSTU Lost & Found System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">
+    <svg width="26" height="26" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+      <path d="M15 3C10.03 3 6 7.03 6 12C6 18.5 15 27 15 27C15 27 24 18.5 24 12C24 7.03 19.97 3 15 3Z" stroke="url(#logoGrad)" stroke-width="1.7" stroke-linejoin="round"/>
+      <circle cx="14" cy="11" r="3.2" stroke="url(#logoGrad)" stroke-width="1.7"/>
+      <line x1="16.4" y1="13.4" x2="18.6" y2="15.6" stroke="url(#logoGrad)" stroke-width="1.7" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="logoGrad" x1="6" y1="3" x2="24" y2="27" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00d4ff"/>
+          <stop offset="1" stop-color="#00e676"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    HSTU Lost &amp; Found
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" data-page="home"          onclick="showPage('home')">Home</button>
+    <button class="nav-btn"        data-page="report-found"  onclick="showPage('report-found')">Report Found</button>
+    <button class="nav-btn"        data-page="report-lost"   onclick="showPage('report-lost')">Report Lost</button>
+    <button class="nav-btn"        data-page="lost-items"    onclick="showPage('lost-items')">Lost Items</button>
+    <button class="nav-btn"        data-page="claim-missing" onclick="showPage('claim-missing')">Claim Missing</button>
+    <button class="nav-btn"        data-page="about"         onclick="showPage('about')">About</button>
+  </div>
+  <div class="nav-auth" id="nav-auth">
+    <button class="btn-login"    onclick="openAuth('login')">Login</button>
+    <button class="btn-register" onclick="openAuth('register')">Register</button>
+  </div>
+  <div class="nav-user" id="nav-user" style="display:none;">
+    <div class="nav-avatar" id="nav-avatar" onclick="showPage('profile')">?</div>
+    <span class="nav-username" id="nav-username"></span>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HOME ═══════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <h1>HSTU<br><span class="cyan">Lost &amp; Found</span><br><span>System</span></h1>
+    <p class="hero-sub">Lost something? Found something? Our cloud-powered portal reconnects belongings with their rightful owners.</p>
+    <div class="hero-btns">
+      <button class="btn-primary"   onclick="showPage('claim-missing')">🔍 Browse Found Items</button>
+      <button class="btn-secondary" onclick="handleReportFound()">📦 Report Found Item</button>
+    </div>
+  </div>
+
+  <div class="recent-section">
+    <div class="section-header">
+      <div>
+        <div class="section-label">Latest</div>
+        <div class="section-title" style="margin-bottom:0;">Recent Found Items</div>
+      </div>
+      <button class="view-all-btn" onclick="showPage('claim-missing')">View All →</button>
+    </div>
+    <div class="items-grid" id="home-grid">
+      <div class="loading-state"><div class="spinner"></div><p>Loading items…</p></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>HSTU Lost &amp; Found System</p>
+    <p>Project by <strong>Md. Tanjimul Haque Meet</strong> · ID: <strong>2002049</strong> · HSTU, Dinajpur</p>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════ CLAIM MISSING (browse found items) ═══════════════════════════════ -->
+<div id="page-claim-missing" class="page">
+  <div class="items-page">
+    <div class="page-header">
+      <h2>Claim a Found Item</h2>
+      <p>Browse items found on campus. See yours? Submit a claim — the finder's contact info is shared with you by email once admin approves it.</p>
+    </div>
+    <div class="search-filter-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon-inner">🔍</span>
+        <input type="text" id="claim-search" placeholder="Search by name, location, or description…" oninput="filterClaimItems()"/>
+      </div>
+      <select class="filter-select" id="claim-sort" onchange="filterClaimItems()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="az">Name A–Z</option>
+      </select>
+    </div>
+    <div class="items-count-bar"><span id="claim-count">Loading…</span></div>
+    <div class="items-grid" id="claim-grid">
+      <div class="loading-state"><div class="spinner"></div><p>Fetching from cloud…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LOST ITEMS (public list) ═══════════════════════════════ -->
+<div id="page-lost-items" class="page">
+  <div class="items-page">
+    <div class="page-header">
+      <h2>Lost Items</h2>
+      <p>Items reported lost on campus. Think you found one? Open it and press “I Found This” — the owner is emailed right away.</p>
+    </div>
+    <div class="search-filter-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon-inner">🔍</span>
+        <input type="text" id="lost-search" placeholder="Search by name, location, or description…" oninput="filterLostItems()"/>
+      </div>
+      <select class="filter-select" id="lost-cat-filter" onchange="filterLostItems()">
+        <option value="">All Categories</option>
+      </select>
+      <select class="filter-select" id="lost-sort" onchange="filterLostItems()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="az">Name A–Z</option>
+      </select>
+    </div>
+    <div class="items-count-bar"><span id="lost-count">Loading…</span></div>
+    <div class="items-grid" id="lost-grid">
+      <div class="loading-state"><div class="spinner"></div><p>Fetching lost reports…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ REPORT FOUND ═══════════════════════════════ -->
+<div id="page-report-found" class="page">
+  <div class="form-page">
+    <div class="form-page-header">
+      <h2>📦 Report a Found Item</h2>
+      <p>Found something? Fill this form. Your submission will be reviewed by admin and appear on the portal after approval.</p>
+    </div>
+    <div id="rf-auth-required" class="auth-required-box" style="display:none;">
+      <p>⚠️ You must be logged in to report a found item.</p>
+      <button class="btn-primary" style="margin:0 auto;" onclick="openAuth('login')">Login to Continue</button>
+    </div>
+    <div class="form-card" id="rf-form-card" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="found-name" placeholder="e.g. Umbrella, Wallet, Keys"/>
+        </div>
+        <div class="form-group">
+          <label>Where did you find it? *</label>
+          <input type="text" id="found-loc" placeholder="e.g. Library 2nd floor"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Item Description *</label>
+        <textarea id="found-desc" placeholder="Color, brand, distinguishing features…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Finder's Name *</label>
+          <input type="text" id="found-finder-name" placeholder="Your name"/>
+        </div>
+        <div class="form-group">
+          <label>Date Found</label>
+          <input type="date" id="found-date"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Your Contact Email *</label>
+          <input type="email" id="found-finder-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Your Phone Number</label>
+          <input type="text" id="found-finder-phone" placeholder="+880…"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Photos (optional, up to 3 — helps the owner recognize it)</label>
+        <input type="file" id="found-photo" accept="image/*" multiple onchange="addPhotos('found',this)"/>
+        <div class="photo-count-text" id="found-photo-count">0 / 3 photos</div>
+        <div class="photo-msg" id="found-photo-msg"></div>
+        <div class="photo-previews" id="found-photo-previews"></div>
+        <div class="upload-progress-text" id="found-upload-status"></div>
+      </div>
+      <div id="rf-msg"></div>
+      <button class="btn-full" id="btn-submit-found" style="margin-top:8px;" onclick="submitFoundItem()">Submit Found Item Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ REPORT LOST ═══════════════════════════════ -->
+<div id="page-report-lost" class="page">
+  <div class="form-page">
+    <div class="form-page-header">
+      <h2>🔎 Report a Lost Item</h2>
+      <p>Lost something? Fill in the details. Admin will review and approve before it appears publicly.</p>
+    </div>
+    <div id="rl-auth-required" class="auth-required-box" style="display:none;">
+      <p>⚠️ You must be logged in to report a lost item.</p>
+      <button class="btn-primary" style="margin:0 auto;" onclick="openAuth('login')">Login to Continue</button>
+    </div>
+    <div class="form-card" id="rl-form-card" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="lost-name" placeholder="e.g. Umbrella, Wallet, Keys"/>
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="lost-cat-select"><option value="">Select…</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea id="lost-desc" placeholder="Color, brand, distinguishing features…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Where did you lose it?</label>
+          <input type="text" id="lost-loc"/>
+        </div>
+        <div class="form-group">
+          <label>Date Lost</label>
+          <input type="date" id="lost-date"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Photos (optional, up to 3)</label>
+        <input type="file" id="lost-photo" accept="image/*" multiple onchange="addPhotos('lost',this)"/>
+        <div class="photo-count-text" id="lost-photo-count">0 / 3 photos</div>
+        <div class="photo-msg" id="lost-photo-msg"></div>
+        <div class="photo-previews" id="lost-photo-previews"></div>
+        <div class="upload-progress-text" id="lost-upload-status"></div>
+      </div>
+      <div id="rl-msg"></div>
+      <button class="btn-full" id="btn-submit-lost" style="margin-top:8px;" onclick="submitLostItem()">Submit Lost Item Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PROFILE ═══════════════════════════════ -->
+<div id="page-profile" class="page">
+  <div class="profile-page">
+    <div class="profile-header">
+      <div class="profile-avatar-big" id="p-avatar">?</div>
+      <div class="profile-info">
+        <h2 id="p-name">—</h2>
+        <p id="p-email">—</p>
+        <p id="p-phone"></p>
+      </div>
+    </div>
+    <div class="profile-tabs">
+      <button class="profile-tab active" onclick="switchTab('posts',this)">📋 My Posts</button>
+      <button class="profile-tab" onclick="switchTab('claims',this)">✅ My Claims</button>
+      <button class="profile-tab" onclick="switchTab('edit',this)">✏️ Edit Profile</button>
+    </div>
+    <div id="tab-posts" class="profile-panel active">
+      <div id="posts-list"><div class="loading-state"><div class="spinner"></div><p>Loading…</p></div></div>
+    </div>
+    <div id="tab-claims" class="profile-panel">
+      <div id="claims-list"><div class="loading-state"><div class="spinner"></div><p>Loading…</p></div></div>
+    </div>
+    <div id="tab-edit" class="profile-panel">
+      <div class="form-card">
+        <h3 style="font-family:'Space Grotesk',sans-serif;margin-bottom:20px;">Edit Profile</h3>
+        <div class="form-group"><label>Full Name</label><input type="text" id="edit-name"/></div>
+        <div class="form-group"><label>Phone Number</label><input type="text" id="edit-phone" placeholder="+880…"/></div>
+        <div id="edit-msg"></div>
+        <button class="btn-full" id="btn-save-profile" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ADMIN ═══════════════════════════════ -->
+<div id="page-admin" class="page">
+  <div class="admin-page">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-label">Overview</div>
+      <button class="admin-nav-btn active" onclick="switchAdmin('dashboard',this)">📊 Dashboard</button>
+      <div class="admin-sidebar-label">Approvals</div>
+      <button class="admin-nav-btn" onclick="switchAdmin('pending-found',this)">📦 Pending Found <span class="pending-badge" id="badge-pfound">0</span></button>
+      <button class="admin-nav-btn" onclick="switchAdmin('pending-lost',this)">🔎 Pending Lost <span class="pending-badge" id="badge-plost">0</span></button>
+      <div class="admin-sidebar-label">Manage</div>
+      <button class="admin-nav-btn" onclick="switchAdmin('all-found',this)">✅ All Found Items</button>
+      <button class="admin-nav-btn" onclick="switchAdmin('all-lost',this)">📋 All Lost Items</button>
+      <button class="admin-nav-btn" onclick="switchAdmin('claims',this)">🤝 Claims</button>
+      <button class="admin-nav-btn" onclick="switchAdmin('responses',this)">💌 Finder Responses</button>
+      <button class="admin-nav-btn" onclick="switchAdmin('users',this)">👥 Users</button>
+    </div>
+    <div class="admin-content">
+
+      <!-- Dashboard -->
+      <div id="admin-dashboard" class="admin-panel active">
+        <h2>📊 Dashboard</h2>
+        <div class="stats-grid">
+          <div class="stat-card c-cyan">  <div class="stat-val" id="a-found">—</div><div class="stat-label">Total Found Items</div></div>
+          <div class="stat-card c-green"> <div class="stat-val" id="a-lost">—</div> <div class="stat-label">Total Lost Reports</div></div>
+          <div class="stat-card c-yellow"><div class="stat-val" id="a-pfound">—</div><div class="stat-label">Pending Found</div></div>
+          <div class="stat-card c-yellow"><div class="stat-val" id="a-plost">—</div> <div class="stat-label">Pending Lost</div></div>
+          <div class="stat-card c-cyan">  <div class="stat-val" id="a-users">—</div> <div class="stat-label">Registered Users</div></div>
+          <div class="stat-card c-red">   <div class="stat-val" id="a-pclaims">—</div><div class="stat-label">Pending Claims</div></div>
+          <div class="stat-card c-green"> <div class="stat-val" id="a-aclaims">—</div><div class="stat-label">Approved Claims</div></div>
+        </div>
+      </div>
+
+      <!-- Pending Found -->
+      <div id="admin-pending-found" class="admin-panel">
+        <h2>📦 Pending Found Items — Awaiting Approval</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Item</th><th>Photo</th><th>Location</th><th>Finder</th><th>Email</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="tb-pending-found"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pending Lost -->
+      <div id="admin-pending-lost" class="admin-panel">
+        <h2>🔎 Pending Lost Items — Awaiting Approval</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Item</th><th>Photo</th><th>Category</th><th>Location</th><th>Reporter</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="tb-pending-lost"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- All Found -->
+      <div id="admin-all-found" class="admin-panel">
+        <h2>✅ All Found Items</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Item</th><th>Photo</th><th>Location</th><th>Finder</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tb-all-found"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- All Lost -->
+      <div id="admin-all-lost" class="admin-panel">
+        <h2>📋 All Lost Items</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Item</th><th>Photo</th><th>Category</th><th>Reporter</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tb-all-lost"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Claims -->
+      <div id="admin-claims" class="admin-panel">
+        <h2>🤝 Process Claims</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Claimant</th><th>Item</th><th>Message</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tb-claims"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Finder Responses -->
+      <div id="admin-responses" class="admin-panel">
+        <h2>💌 Finder Responses</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Finder</th><th>Lost Item</th><th>Owner</th><th>Message</th><th>Date</th><th>Email</th><th>Actions</th></tr></thead>
+            <tbody id="tb-responses"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div id="admin-users" class="admin-panel">
+        <h2>👥 Manage Users</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Actions</th></tr></thead>
+            <tbody id="tb-users"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ABOUT ═══════════════════════════════ -->
+<div id="page-about" class="page">
+  <div class="about-page">
+    <div class="about-hero-card">
+      <h2>About This Project</h2>
+      <p>A cloud-powered Lost &amp; Found management system for HSTU campus — connecting finders with owners using free cloud infrastructure.</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card"><div class="icon">☁️</div><h3>Cloud Powered</h3><p>All data lives in Firebase — always in sync, zero server cost.</p></div>
+      <div class="about-card"><div class="icon">🔐</div><h3>User Accounts</h3><p>Register and login to report items, make claims, and track your history.</p></div>
+      <div class="about-card"><div class="icon">✅</div><h3>Admin Approval</h3><p>Every post is reviewed by admin before going public — ensuring quality content.</p></div>
+      <div class="about-card"><div class="icon">📊</div><h3>Admin Dashboard</h3><p>Full control panel to manage users, moderate content, and process claims.</p></div>
+      <div class="about-card"><div class="icon">🔔</div><h3>Private Claims</h3><p>Finder contact details stay private until a claim is approved, then sent by email.</p></div>
+      <div class="about-card"><div class="icon">📱</div><h3>Mobile Ready</h3><p>Works perfectly on any device — phones, tablets, or desktop.</p></div>
+    </div>
+    <div class="tech-card">
+      <h3>⚙️ Technology Stack</h3>
+      <div class="tech-tags">
+        <span class="tech-tag">Firebase Authentication</span>
+        <span class="tech-tag">Cloud Firestore</span>
+        <span class="tech-tag">Cloudinary</span>
+        <span class="tech-tag">Google Apps Script (Mailer)</span>
+        <span class="tech-tag">GitHub Pages</span>
+        <span class="tech-tag">HTML5 / CSS3</span>
+      </div>
+    </div>
+    <div class="dev-card">
+      <div class="dev-avatar">M</div>
+      <div class="dev-info">
+        <h3>Md. Tanjimul Haque Meet</h3>
+        <p>Student ID: 2002049 &nbsp;|&nbsp; Level 4, Semester II<br/>
+        Department of CSE, HSTU<br/></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ITEM MODAL (found / lost / admin viewer) ═══════════════════════════════ -->
+<div class="modal-overlay" id="item-modal" onclick="closeItemModal(event)">
+  <div class="modal"><div id="item-modal-body"></div></div>
+</div>
+
+<!-- ═══════════════════════════════ AUTH MODAL ═══════════════════════════════ -->
+<div class="modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
+  <div class="auth-modal">
+
+    <!-- LOGIN -->
+    <div id="view-login">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Sign in to your HSTU Lost &amp; Found account</p>
+      <div class="form-group"><label>Email Address</label><input type="email" id="li-email" placeholder="your@email.com"/></div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="forgot-link"><a onclick="switchAuth('forgot')">Forgot password?</a></div>
+      <div class="form-error" id="li-err"></div>
+      <button class="btn-full" id="btn-login" onclick="doLogin()">Sign In</button>
+
+      <div class="auth-switch">Don't have an account? <a onclick="switchAuth('register')">Sign up here</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="view-register" style="display:none;">
+      <h2>Create Account</h2>
+      <p class="subtitle">Join the HSTU Lost &amp; Found community</p>
+      <div class="form-group"><label>Full Name *</label><input type="text" id="rg-name" placeholder="Your full name"/></div>
+      <div class="form-group"><label>Email Address *</label><input type="email" id="rg-email" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Phone Number</label><input type="text" id="rg-phone" placeholder="+880…"/></div>
+      <div class="form-group"><label>Password * (min 6 chars)</label><input type="password" id="rg-pass" placeholder="••••••••"/></div>
+      <div class="form-error"   id="rg-err"></div>
+      <div class="form-success" id="rg-ok"></div>
+      <button class="btn-full" id="btn-register" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="switchAuth('login')">Sign in</a></div>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="view-forgot" style="display:none;">
+      <h2>Forgot Password</h2>
+      <p class="subtitle">Enter your registered email and we'll send you a secure link to reset your password.</p>
+      <div class="form-group"><label>Email Address</label><input type="email" id="fp-email" placeholder="your@email.com"/></div>
+      <div class="form-error"   id="fp-err"></div>
+      <div class="form-success" id="fp-ok"></div>
+      <button class="btn-full" id="btn-forgot" onclick="doForgotPassword()">Send Reset Link</button>
+      <div class="auth-switch"><a onclick="switchAuth('login')">← Back to Login</a></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════ FIREBASE SDK (compat build) ═══════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+
+// --- Firebase ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAe0Lmw0vDa8P0s41X4CScrI4gAiXY_Gn4",
+  authDomain: "hstu-lost-found-system.firebaseapp.com",
+  projectId: "hstu-lost-found-system",
+  storageBucket: "hstu-lost-found-system.firebasestorage.app",
+  messagingSenderId: "793000328832",
+  appId: "1:793000328832:web:b3212a96f9c66894fcf065"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+const FieldValue = firebase.firestore.FieldValue;
+
+// --- Cloudinary (photo uploads) ---
+const CLOUDINARY_CLOUD_NAME    = "w52yal2x";
+const CLOUDINARY_UPLOAD_PRESET = "lostfound";
+
+// --- Apps Script Mailer ---
+const MAILER_URL  = "https://script.google.com/macros/s/AKfycbwlUd390dO2gUN8tXvG5ymqOf62tMmoXPfh-ujBJ1PYryMDjKQaTy1bwv0M44ld-8lGiQ/exec";
+const MAIL_SECRET = "meet209367";   // must match MAIL_SECRET in Code.gs
+
+// --- Settings ---
+const MAX_PHOTOS            = 3;   // photos per post
+const CLAIMED_VISIBLE_DAYS  = 7;   // claimed / resolved items stay public this many days, then disappear from public lists
+
+const CATEGORIES = [
+  "Electronics", "Documents & ID Cards", "Bags & Wallets", "Keys",
+  "Clothing & Accessories", "Books & Stationery", "Jewelry", "Others"
+];
+
+let currentUser   = null;   // { id, name, email, phone, role }
+let allFoundItems = [];     // publicly visible found items
+let allLostItems  = [];     // publicly visible lost items
+
+// ═══════════════════════════════════════════════════════════════
+// SMALL HELPERS
+// ═══════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function initial(name) { return ((name || '?').trim()[0] || '?').toUpperCase(); }
+function tsMillis(ts) {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === 'function') return ts.toMillis();
+  return 0;
+}
+function fmtDate(val) {
+  if (!val) return 'Unknown';
+  let d;
+  if (typeof val.toDate === 'function') d = val.toDate();
+  else d = new Date(val);
+  if (isNaN(d)) return String(val).split('T')[0] || val;
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+function mapDocs(snap) { return snap.docs.map(d => ({ id: d.id, ...d.data() })); }
+function byNewest(field) { return (a, b) => tsMillis(b[field || 'createdAt']) - tsMillis(a[field || 'createdAt']); }
+
+// Photos: supports new photoURLs[] and old single photoURL
+function getPhotos(item) {
+  if (Array.isArray(item.photoURLs) && item.photoURLs.length) return item.photoURLs.filter(Boolean);
+  return item.photoURL ? [item.photoURL] : [];
+}
+function imgFail(img, cls, icon) { img.outerHTML = `<div class="${cls}">${icon}</div>`; }
+
+function statusClass(s) { return 'status-' + String(s || 'pending').toLowerCase(); }
+function pill(s) { return `<span class="status-pill ${statusClass(s)}">${esc(s || 'Pending')}</span>`; }
+function notice(type, html) { return `<div class="notice-box notice-${type}">${html}</div>`; }
+
+// A Claimed / Resolved item stays public for CLAIMED_VISIBLE_DAYS, then is hidden
+function isPubliclyVisible(item, closedStatus, closedField) {
+  if (item.status === 'Approved') return true;
+  if (item.status === closedStatus) {
+    const t = tsMillis(item[closedField]);
+    if (!t) return true; // timestamp not resolved yet (just written)
+    return (Date.now() - t) < CLAIMED_VISIBLE_DAYS * 86400000;
+  }
+  return false;
+}
+
+// ── Loading helpers ──
+// track() just runs the loader; circle spinners are shown by each section itself
+async function track(fn) { return await fn(); }
+function spinnerBlock(msg) {
+  return `<div class="loading-state"><div class="spinner"></div><p>${esc(msg || 'Loading…')}</p></div>`;
+}
+function errorBlock(retryFn, title) {
+  return `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>${esc(title || 'Could not load')}</h3><p>Check your connection and try again.</p><button class="btn-retry" onclick="${retryFn}()">↻ Retry</button></div>`;
+}
+function tableSpinner(id, cols) {
+  document.getElementById(id).innerHTML = `<tr><td colspan="${cols}" class="tbl-state"><div class="spinner spinner-sm"></div><span>Loading…</span></td></tr>`;
+}
+function tableError(id, cols, retryFn) {
+  document.getElementById(id).innerHTML = `<tr><td colspan="${cols}" class="tbl-state">⚠️ Could not load. <button class="btn-retry" style="margin:0 0 0 8px;" onclick="${retryFn}()">↻ Retry</button></td></tr>`;
+}
+function setBusy(btn, busy, label) {
+  if (!btn) return;
+  if (busy) {
+    if (btn.dataset.orig !== undefined) return;
+    btn.dataset.orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="btn-spinner"></span> ${esc(label || 'Please wait…')}`;
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.orig !== undefined) { btn.innerHTML = btn.dataset.orig; delete btn.dataset.orig; }
+  }
+}
+
+let _toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOUDINARY + MULTI-PHOTO PICKER (max 3)
+// ═══════════════════════════════════════════════════════════════
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST', body: formData
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Photo upload failed');
+  return data.secure_url;
+}
+
+async function uploadPhotos(files, statusEl) {
+  const urls = [];
+  try {
+    for (let i = 0; i < files.length; i++) {
+      statusEl.style.display = 'block';
+      statusEl.textContent = `Uploading photo ${i + 1} of ${files.length}…`;
+      urls.push(await uploadToCloudinary(files[i]));
+    }
+  } finally {
+    statusEl.style.display = 'none';
+  }
+  return urls;
+}
+
+const photoFiles = { found: [], lost: [] };
+let _previewUrls = { found: [], lost: [] };
+
+function addPhotos(kind, input) {
+  const msg = document.getElementById(kind + '-photo-msg');
+  msg.textContent = '';
+  const incoming = Array.from(input.files || []).filter(f => f.type.startsWith('image/'));
+  input.value = '';
+  let combined = photoFiles[kind].concat(incoming);
+  if (combined.length > MAX_PHOTOS) {
+    combined = combined.slice(0, MAX_PHOTOS);
+    msg.textContent = 'Max image limit 3';
+  }
+  photoFiles[kind] = combined;
+  renderPhotoPreviews(kind);
+}
+function removePhoto(kind, i) {
+  photoFiles[kind].splice(i, 1);
+  document.getElementById(kind + '-photo-msg').textContent = '';
+  renderPhotoPreviews(kind);
+}
+function renderPhotoPreviews(kind) {
+  _previewUrls[kind].forEach(u => URL.revokeObjectURL(u));
+  _previewUrls[kind] = photoFiles[kind].map(f => URL.createObjectURL(f));
+  document.getElementById(kind + '-photo-previews').innerHTML = _previewUrls[kind].map((u, i) =>
+    `<div class="photo-thumb"><img src="${u}" alt="Photo ${i + 1}"><button type="button" class="photo-remove" title="Remove" onclick="removePhoto('${kind}',${i})">✕</button></div>`
+  ).join('');
+  document.getElementById(kind + '-photo-count').textContent = `${photoFiles[kind].length} / ${MAX_PHOTOS} photos`;
+}
+function resetPhotos(kind) {
+  photoFiles[kind] = [];
+  document.getElementById(kind + '-photo-msg').textContent = '';
+  renderPhotoPreviews(kind);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAILER
+// ═══════════════════════════════════════════════════════════════
+async function callMailer(action, params) {
+  const p = new URLSearchParams({ secret: MAIL_SECRET, action, ...params });
+  const res = await fetch(MAILER_URL + '?' + p.toString());
+  return res.json();
+}
+const sendClaimApprovalEmail  = params => callMailer('sendClaimEmail', params);
+const sendFoundResponseEmail  = params => callMailer('sendFoundResponseEmail', params);
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showPage(name) {
+  if (name === 'admin' && (!currentUser || currentUser.role !== 'admin')) name = 'home';
+  if (name === 'profile' && !currentUser) { openAuth('login'); return; }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'home')          loadHome();
+  if (name === 'claim-missing') loadClaimItems();
+  if (name === 'lost-items')    loadLostItems();
+  if (name === 'report-found')  checkReportFoundAuth();
+  if (name === 'report-lost')   checkReportLostAuth();
+  if (name === 'profile')       loadProfile();
+  if (name === 'admin')         loadAdminDashboard();
+}
+
+function handleReportFound() {
+  if (!currentUser) { openAuth('login'); return; }
+  showPage('report-found');
+}
+
+function updateNav() {
+  const links = document.querySelector('.nav-links');
+  if (currentUser) {
+    document.getElementById('nav-auth').style.display = 'none';
+    document.getElementById('nav-user').style.display = 'flex';
+    document.getElementById('nav-username').textContent = currentUser.name.split(' ')[0];
+    document.getElementById('nav-avatar').textContent   = initial(currentUser.name);
+    if (currentUser.role === 'admin' && !document.getElementById('admin-nav-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn'; btn.id = 'admin-nav-btn'; btn.dataset.page = 'admin';
+      btn.textContent = '⚙️ Admin';
+      btn.onclick = () => showPage('admin');
+      links.appendChild(btn);
+    }
+    if (!document.getElementById('profile-nav-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn'; btn.id = 'profile-nav-btn'; btn.dataset.page = 'profile';
+      btn.textContent = '👤 Profile';
+      btn.onclick = () => showPage('profile');
+      links.appendChild(btn);
+    }
+  } else {
+    document.getElementById('nav-auth').style.display = 'flex';
+    document.getElementById('nav-user').style.display = 'none';
+    const ab = document.getElementById('admin-nav-btn');   if (ab) ab.remove();
+    const pb = document.getElementById('profile-nav-btn'); if (pb) pb.remove();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOME + CLAIM MISSING (public found items)
+// ═══════════════════════════════════════════════════════════════
+async function fetchVisibleFound() {
+  const snap = await db.collection('foundItems').where('status', 'in', ['Approved', 'Claimed']).get();
+  return mapDocs(snap)
+    .filter(i => isPubliclyVisible(i, 'Claimed', 'claimedAt'))
+    .sort(byNewest('createdAt'));
+}
+
+async function loadHome() {
+  const grid = document.getElementById('home-grid');
+  grid.innerHTML = spinnerBlock('Loading items…');
+  try {
+    allFoundItems = await track(fetchVisibleFound);
+    renderFoundCards(allFoundItems.slice(0, 4), 'home-grid');
+  } catch (e) {
+    console.error(e);
+    grid.innerHTML = errorBlock('loadHome', 'Could not load items');
+  }
+}
+
+async function loadClaimItems() {
+  document.getElementById('claim-grid').innerHTML = spinnerBlock('Fetching from cloud…');
+  document.getElementById('claim-count').textContent = 'Loading…';
+  try {
+    allFoundItems = await track(fetchVisibleFound);
+    filterClaimItems();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('claim-count').textContent = '';
+    document.getElementById('claim-grid').innerHTML = errorBlock('loadClaimItems');
+  }
+}
+
+function filterClaimItems() {
+  const q    = (document.getElementById('claim-search')?.value || '').toLowerCase();
+  const sort = document.getElementById('claim-sort')?.value || 'newest';
+  let items  = [...allFoundItems];
+  if (q) items = items.filter(i =>
+    (i.itemName||'').toLowerCase().includes(q) ||
+    (i.description||'').toLowerCase().includes(q) ||
+    (i.location||'').toLowerCase().includes(q)
+  );
+  items.sort(byNewest('createdAt'));
+  if (sort === 'az')     items.sort((a,b) => (a.itemName||'').localeCompare(b.itemName||''));
+  if (sort === 'oldest') items.reverse();
+  document.getElementById('claim-count').textContent = `Showing ${items.length} found item${items.length!==1?'s':''}`;
+  renderFoundCards(items, 'claim-grid');
+}
+
+// ── Shared card markup ──
+function itemCardHTML(o) {
+  const photo = o.photos[0] || '';
+  return `<div class="item-card" onclick="${o.open}('${o.key}')">
+    <div class="card-img-wrap">
+      ${photo ? `<img src="${esc(photo)}" alt="${esc(o.title)}" onerror="imgFail(this,'card-placeholder','${o.icon}')">` : `<div class="card-placeholder">${o.icon}</div>`}
+      <span class="card-status ${o.badgeClass}">${esc(o.badge)}</span>
+      ${o.photos.length > 1 ? `<span class="card-photo-count">📷 ${o.photos.length}</span>` : ''}
+    </div>
+    <div class="card-body">
+      <div class="card-category">${esc(o.label)}</div>
+      <div class="card-title">${esc(o.title)}</div>
+      <div class="card-desc">${esc(o.desc || 'No description provided.')}</div>
+    </div>
+    <div class="card-footer">
+      <span class="card-date">📅 ${esc(o.date)}</span>
+      <button class="btn-card" onclick="event.stopPropagation();${o.open}('${o.key}')">View Details</button>
+    </div>
+  </div>`;
+}
+
+function renderFoundCards(items, gridId) {
+  const grid = document.getElementById(gridId);
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No items found</h3><p>Try a different search.</p></div>';
+    return;
+  }
+  window._cardItems = window._cardItems || {};
+  grid.innerHTML = items.map((item, i) => {
+    const key = gridId + '_' + i;
+    window._cardItems[key] = item;
+    const status = item.status || 'Approved';
+    return itemCardHTML({
+      key, open: 'openFoundModalByKey', icon: '📦',
+      photos: getPhotos(item),
+      badge: status, badgeClass: statusClass(status),
+      label: '📍 ' + (item.location || 'Campus'),
+      title: item.itemName || 'Unknown Item',
+      desc: item.description,
+      date: fmtDate(item.dateFound || item.createdAt)
+    });
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHOTO GALLERY (used in all popups)
+// ═══════════════════════════════════════════════════════════════
+function galleryHTML(photos, icon) {
+  if (!photos.length) return `<div class="modal-img-placeholder">${icon}</div>`;
+  window._gal = { photos, idx: 0 };
+  const multi = photos.length > 1;
+  return `<div class="gallery">
+      <img id="gal-main" class="modal-img" src="${esc(photos[0])}" alt="" onerror="imgFail(this,'modal-img-placeholder','${icon}')">
+      ${multi ? `<button class="gal-nav gal-prev" onclick="galleryGo(-1)" title="Previous">‹</button>
+                 <button class="gal-nav gal-next" onclick="galleryGo(1)" title="Next">›</button>
+                 <div class="gal-count" id="gal-count">1 / ${photos.length}</div>` : ''}
+    </div>
+    ${multi ? `<div class="gal-thumbs">${photos.map((p, i) =>
+      `<img class="gal-thumb${i === 0 ? ' active' : ''}" src="${esc(p)}" alt="" onclick="galleryShow(${i})">`).join('')}</div>` : ''}`;
+}
+function galleryShow(i) {
+  const g = window._gal; if (!g) return;
+  g.idx = (i + g.photos.length) % g.photos.length;
+  const main = document.getElementById('gal-main'); if (main) main.src = g.photos[g.idx];
+  const cnt = document.getElementById('gal-count'); if (cnt) cnt.textContent = `${g.idx + 1} / ${g.photos.length}`;
+  document.querySelectorAll('.gal-thumb').forEach((t, n) => t.classList.toggle('active', n === g.idx));
+}
+function galleryGo(d) { if (window._gal) galleryShow(window._gal.idx + d); }
+
+function openModalWith(html) {
+  document.getElementById('item-modal-body').innerHTML = html;
+  document.getElementById('item-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeItemModal(e) { if (e.target.id === 'item-modal') closeItemModalBtn(); }
+function closeItemModalBtn() {
+  document.getElementById('item-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  window._currentFoundItem = null;
+  window._currentLostItem  = null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FOUND-ITEM MODAL + CLAIMS
+// ═══════════════════════════════════════════════════════════════
+function openFoundModalByKey(key) {
+  const item = (window._cardItems || {})[key];
+  if (item) openFoundModalWithItem(item);
+}
+
+function openFoundModalWithItem(item) {
+  if (!item) return;
+  const status = item.status || 'Approved';
+  window._currentFoundItem = item;
+  openModalWith(`
+    ${galleryHTML(getPhotos(item), '📦')}
+    <div class="modal-body">
+      <div class="modal-category">📦 Found Item · ${pill(status)}</div>
+      <div class="modal-title">${esc(item.itemName || 'Unknown')}</div>
+      <div class="modal-desc">${esc(item.description || 'No description.')}</div>
+      <div class="modal-info">
+        <div class="modal-row"><span class="modal-label">📍 Found at</span><span class="modal-value">${esc(item.location || 'Unknown')}</span></div>
+        <div class="modal-row"><span class="modal-label">📅 Date Found</span><span class="modal-value">${esc(fmtDate(item.dateFound || item.createdAt))}</span></div>
+      </div>
+      <div class="modal-contact-box">
+        <h4>🔒 Privacy Protected</h4>
+        <p>Finder contact details are kept private. Submit a claim below.</p>
+      </div>
+      <div id="claim-area"></div>
+      <div class="modal-actions">
+        <button class="btn-modal-close" onclick="closeItemModalBtn()">Close</button>
+      </div>
+    </div>`);
+  renderClaimArea(item);
+}
+
+// Active claim = a Pending or Approved claim by this user on this item
+async function getActiveClaim(itemId, userId) {
+  const snap = await db.collection('claims')
+    .where('claimantUserID', '==', userId)
+    .where('foundItemId', '==', itemId).get();
+  return snap.docs.some(d => ['Pending', 'Approved'].includes(d.data().status));
+}
+
+async function renderClaimArea(item) {
+  const area = document.getElementById('claim-area');
+  if (!area) return;
+  if (item.status === 'Claimed') { area.innerHTML = notice('info', '🎉 This item has already been claimed.'); return; }
+  if (!currentUser) {
+    area.innerHTML = `<div class="login-prompt-box">
+      <p>🔐 You must be logged in to submit a claim.</p>
+      <button class="btn-primary" style="margin:0 auto;" onclick="closeItemModalBtn();openAuth('login')">Login to Claim</button>
+    </div>`;
+    return;
+  }
+  if (currentUser.role === 'admin') { area.innerHTML = ''; return; }
+  if (item.submittedBy === currentUser.id) {
+    area.innerHTML = notice('warn', "You posted this item, so you can't claim it.");
+    return;
+  }
+  area.innerHTML = '<div class="mini-loading"><span class="mini-spinner"></span> Checking…</div>';
+  let already = false;
+  try { already = await getActiveClaim(item.id, currentUser.id); } catch (e) { console.warn(e); }
+  if (window._currentFoundItem !== item) return; // modal changed meanwhile
+  if (already) { area.innerHTML = notice('info', 'You already claimed this item.'); return; }
+  area.innerHTML = `<div class="claim-form">
+      <h4>🙋 Submit a Claim</h4>
+      <textarea id="claim-msg-input" placeholder="Describe how this item belongs to you — include identifying details…"></textarea>
+      <button class="btn-submit-claim" id="claim-submit-btn" onclick="submitClaimCurrent()">Submit Claim</button>
+      <div id="claim-feedback" style="font-size:0.82rem;margin-top:8px;"></div>
+    </div>`;
+}
+
+async function submitClaimCurrent() {
+  const item = window._currentFoundItem;
+  const fb   = document.getElementById('claim-feedback');
+  const area = document.getElementById('claim-area');
+  const btn  = document.getElementById('claim-submit-btn');
+  const fail = m => { if (fb) { fb.className = 'inline-msg error'; fb.textContent = '❌ ' + m; } };
+  if (!item) { showToast('Item not found. Please close and reopen.', 'error'); return; }
+  if (!currentUser) { openAuth('login'); return; }
+  if (item.submittedBy === currentUser.id) { fail("You posted this item, so you can't claim it."); return; }
+  const msg = (document.getElementById('claim-msg-input')?.value || '').trim();
+
+  setBusy(btn, true, 'Submitting…');
+  try {
+    // Re-check against fresh data (guards double clicks / two tabs / stale popup)
+    const fresh = await db.collection('foundItems').doc(item.id).get();
+    if (!fresh.exists) { fail('This item is no longer available.'); return; }
+    const fd = fresh.data();
+    if (fd.submittedBy === currentUser.id) { fail("You posted this item, so you can't claim it."); return; }
+    if (fd.status === 'Claimed') { area.innerHTML = notice('info', '🎉 This item has already been claimed.'); return; }
+    if (await getActiveClaim(item.id, currentUser.id)) { area.innerHTML = notice('info', 'You already claimed this item.'); return; }
+
+    await db.collection('claims').add({
+      foundItemId:    item.id,
+      itemName:       item.itemName || 'Unknown',
+      finderUserID:   fd.submittedBy || '',
+      claimantUserID: currentUser.id,
+      claimantName:   currentUser.name,
+      claimantEmail:  currentUser.email,
+      message:        msg,
+      status:         'Pending',
+      claimedAt:      FieldValue.serverTimestamp()
+    });
+    area.innerHTML = '<div class="inline-msg success">✅ Claim submitted! Admin will review and email you if approved.</div>';
+    showToast('Claim submitted!', 'success');
+  } catch (e) {
+    fail(e.message);
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOST ITEMS (public list, "I Found This")
+// ═══════════════════════════════════════════════════════════════
+async function loadLostItems() {
+  document.getElementById('lost-grid').innerHTML = spinnerBlock('Fetching lost reports…');
+  document.getElementById('lost-count').textContent = 'Loading…';
+  try {
+    allLostItems = await track(async () => {
+      const snap = await db.collection('lostItems').where('status', 'in', ['Approved', 'Resolved']).get();
+      return mapDocs(snap).filter(i => isPubliclyVisible(i, 'Resolved', 'resolvedAt'));
+    });
+    filterLostItems();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('lost-count').textContent = '';
+    document.getElementById('lost-grid').innerHTML = errorBlock('loadLostItems');
+  }
+}
+
+function filterLostItems() {
+  const q    = (document.getElementById('lost-search')?.value || '').toLowerCase();
+  const cat  = document.getElementById('lost-cat-filter')?.value || '';
+  const sort = document.getElementById('lost-sort')?.value || 'newest';
+  let items  = [...allLostItems];
+  if (cat) items = items.filter(i => i.category === cat);
+  if (q) items = items.filter(i =>
+    (i.itemName||'').toLowerCase().includes(q) ||
+    (i.description||'').toLowerCase().includes(q) ||
+    (i.location||'').toLowerCase().includes(q)
+  );
+  items.sort(byNewest('createdAt'));
+  if (sort === 'az')     items.sort((a,b) => (a.itemName||'').localeCompare(b.itemName||''));
+  if (sort === 'oldest') items.reverse();
+  document.getElementById('lost-count').textContent = `Showing ${items.length} lost item${items.length!==1?'s':''}`;
+  renderLostCards(items, 'lost-grid');
+}
+
+function renderLostCards(items, gridId) {
+  const grid = document.getElementById(gridId);
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔎</div><h3>No lost items found</h3><p>Try a different search or category.</p></div>';
+    return;
+  }
+  window._lostCards = window._lostCards || {};
+  grid.innerHTML = items.map((item, i) => {
+    const key = gridId + '_' + i;
+    window._lostCards[key] = item;
+    const resolved = item.status === 'Resolved';
+    return itemCardHTML({
+      key, open: 'openLostModalByKey', icon: '🔎',
+      photos: getPhotos(item),
+      badge: resolved ? 'Found ✓' : 'Still Missing',
+      badgeClass: resolved ? 'status-resolved' : 'status-lostopen',
+      label: '🏷 ' + (item.category || 'Other'),
+      title: item.itemName || 'Unknown Item',
+      desc: item.description,
+      date: fmtDate(item.dateLost || item.createdAt)
+    });
+  }).join('');
+}
+
+function openLostModalByKey(key) {
+  const item = (window._lostCards || {})[key];
+  if (item) openLostModal(item);
+}
+
+function openLostModal(item) {
+  window._currentLostItem = item;
+  const resolved = item.status === 'Resolved';
+  openModalWith(`
+    ${galleryHTML(getPhotos(item), '🔎')}
+    <div class="modal-body">
+      <div class="modal-category">🔎 Lost Item · ${resolved
+        ? '<span class="status-pill status-resolved">Found ✓</span>'
+        : '<span class="status-pill status-lostopen">Still Missing</span>'}</div>
+      <div class="modal-title">${esc(item.itemName || 'Unknown')}</div>
+      <div class="modal-desc">${esc(item.description || 'No description.')}</div>
+      <div class="modal-info">
+        <div class="modal-row"><span class="modal-label">🏷 Category</span><span class="modal-value">${esc(item.category || '—')}</span></div>
+        <div class="modal-row"><span class="modal-label">📍 Lost at</span><span class="modal-value">${esc(item.location || 'Unknown')}</span></div>
+        <div class="modal-row"><span class="modal-label">📅 Date Lost</span><span class="modal-value">${esc(fmtDate(item.dateLost || item.createdAt))}</span></div>
+      </div>
+      <div class="modal-contact-box">
+        <h4>🔒 Owner Privacy Protected</h4>
+        <p>The owner's contact details are private. If you found this, send a message — the owner is emailed right away.</p>
+      </div>
+      <div id="lost-action-area"></div>
+      <div class="modal-actions">
+        <button class="btn-modal-close" onclick="closeItemModalBtn()">Close</button>
+      </div>
+    </div>`);
+  renderLostAction(item);
+}
+
+async function renderLostAction(item) {
+  const area = document.getElementById('lost-action-area');
+  if (!area) return;
+  if (item.status === 'Resolved') { area.innerHTML = notice('success', '✅ The owner marked this item as found.'); return; }
+  if (!currentUser) {
+    area.innerHTML = `<div class="login-prompt-box">
+      <p>🔐 Log in to tell the owner you found this item.</p>
+      <button class="btn-primary" style="margin:0 auto;" onclick="closeItemModalBtn();openAuth('login')">Login to Respond</button>
+    </div>`;
+    return;
+  }
+  if (currentUser.role === 'admin') { area.innerHTML = ''; return; }
+  if (item.userId === currentUser.id) {
+    area.innerHTML = notice('warn', "This is your own report. Manage it from your Profile → My Posts.");
+    return;
+  }
+  area.innerHTML = '<div class="mini-loading"><span class="mini-spinner"></span> Checking…</div>';
+  let already = false;
+  try { already = await hasResponded(item.id, currentUser.id); } catch (e) { console.warn(e); }
+  if (window._currentLostItem !== item) return;
+  if (already) { area.innerHTML = notice('info', 'You already sent a response for this item.'); return; }
+  area.innerHTML = `<div class="claim-form">
+      <h4>👋 I Found This</h4>
+      <textarea id="found-resp-msg" maxlength="500" placeholder="Where is the item now? How can the owner reach you? (the owner also gets your name, email and phone)"></textarea>
+      <button class="btn-submit-claim" id="found-resp-btn" onclick="submitFoundResponse()">I Found This</button>
+      <div id="found-resp-feedback" style="font-size:0.82rem;margin-top:8px;"></div>
+    </div>`;
+}
+
+async function hasResponded(lostItemId, userId) {
+  const snap = await db.collection('foundResponses')
+    .where('finderUserId', '==', userId)
+    .where('lostItemId', '==', lostItemId).get();
+  return !snap.empty;
+}
+
+async function submitFoundResponse() {
+  const item = window._currentLostItem;
+  const fb   = document.getElementById('found-resp-feedback');
+  const area = document.getElementById('lost-action-area');
+  const btn  = document.getElementById('found-resp-btn');
+  const fail = m => { if (fb) { fb.className = 'inline-msg error'; fb.textContent = '❌ ' + m; } };
+  if (!item) { showToast('Item not found. Please close and reopen.', 'error'); return; }
+  if (!currentUser) { openAuth('login'); return; }
+  if (item.userId === currentUser.id) { fail("You can't respond to your own report."); return; }
+  const msg = (document.getElementById('found-resp-msg')?.value || '').trim();
+  if (!msg) { fail('Please write a short message for the owner.'); return; }
+
+  setBusy(btn, true, 'Sending…');
+  try {
+    const fresh = await db.collection('lostItems').doc(item.id).get();
+    if (!fresh.exists) { fail('This report is no longer available.'); return; }
+    if (fresh.data().status === 'Resolved') { area.innerHTML = notice('success', '✅ The owner marked this item as found.'); return; }
+    if (await hasResponded(item.id, currentUser.id)) { area.innerHTML = notice('info', 'You already sent a response for this item.'); return; }
+
+    // 1) email the owner immediately   2) save the response either way
+    let emailSent = false;
+    try {
+      const r = await sendFoundResponseEmail({
+        ownerEmail:  item.userEmail || '',
+        ownerName:   item.userName || '',
+        itemName:    item.itemName || '',
+        finderName:  currentUser.name,
+        finderEmail: currentUser.email,
+        finderPhone: currentUser.phone || '',
+        message:     msg
+      });
+      emailSent = !!(r && r.success);
+    } catch (e) { console.warn('Mailer failed', e); }
+
+    await db.collection('foundResponses').add({
+      lostItemId:   item.id,
+      itemName:     item.itemName || 'Unknown',
+      ownerUserId:  item.userId || '',
+      ownerName:    item.userName || '',
+      ownerEmail:   item.userEmail || '',
+      finderUserId: currentUser.id,
+      finderName:   currentUser.name,
+      finderEmail:  currentUser.email,
+      finderPhone:  currentUser.phone || '',
+      message:      msg,
+      emailSent,
+      createdAt:    FieldValue.serverTimestamp()
+    });
+
+    area.innerHTML = emailSent
+      ? '<div class="inline-msg success">✅ Sent! The owner has been emailed your message and contact details.</div>'
+      : '<div class="inline-msg success">✅ Your response is saved and the owner will see it in their profile. The email may be delayed.</div>';
+    showToast('Response sent!', 'success');
+  } catch (e) {
+    fail(e.message);
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REPORT FOUND
+// ═══════════════════════════════════════════════════════════════
+function checkReportFoundAuth() {
+  const box  = document.getElementById('rf-auth-required');
+  const card = document.getElementById('rf-form-card');
+  if (!currentUser) {
+    box.style.display  = 'block';
+    card.style.display = 'none';
+  } else {
+    box.style.display  = 'none';
+    card.style.display = 'block';
+    document.getElementById('found-date').value = new Date().toISOString().split('T')[0];
+  }
+}
+
+async function submitFoundItem() {
+  if (!currentUser) { openAuth('login'); return; }
+  const itemName    = document.getElementById('found-name').value.trim();
+  const loc         = document.getElementById('found-loc').value.trim();
+  const desc        = document.getElementById('found-desc').value.trim();
+  const finderName  = document.getElementById('found-finder-name').value.trim();
+  const date        = document.getElementById('found-date').value;
+  const finderEmail = document.getElementById('found-finder-email').value.trim();
+  const finderPhone = document.getElementById('found-finder-phone').value.trim();
+  const msgEl       = document.getElementById('rf-msg');
+  const btn         = document.getElementById('btn-submit-found');
+  msgEl.innerHTML = '';
+
+  if (!itemName || !loc || !desc || !finderName || !finderEmail) {
+    msgEl.innerHTML = '<div class="inline-msg error">Please fill in all required (*) fields.</div>';
+    return;
+  }
+
+  setBusy(btn, true, 'Submitting…');
+  try {
+    const photoURLs = await uploadPhotos(photoFiles.found, document.getElementById('found-upload-status'));
+    await db.collection('foundItems').add({
+      itemName, description: desc, location: loc, dateFound: date,
+      finderName, finderEmail, finderPhone,
+      photoURL: photoURLs[0] || '', photoURLs,
+      status: 'Pending', submittedBy: currentUser.id,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    msgEl.innerHTML = '<div class="inline-msg success">✅ Submitted! Admin will review and approve your post shortly.</div>';
+    document.getElementById('found-name').value = '';
+    document.getElementById('found-loc').value  = '';
+    document.getElementById('found-desc').value = '';
+    document.getElementById('found-finder-phone').value = '';
+    resetPhotos('found');
+    showToast('Found item reported!', 'success');
+  } catch (e) {
+    msgEl.innerHTML = `<div class="inline-msg error">❌ ${esc(e.message)}</div>`;
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REPORT LOST
+// ═══════════════════════════════════════════════════════════════
+function initCategorySelects() {
+  const opts = CATEGORIES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('lost-cat-select').innerHTML = '<option value="">Select…</option>' + opts;
+  document.getElementById('lost-cat-filter').innerHTML = '<option value="">All Categories</option>' + opts;
+}
+
+function checkReportLostAuth() {
+  const box  = document.getElementById('rl-auth-required');
+  const card = document.getElementById('rl-form-card');
+  if (!currentUser) {
+    box.style.display  = 'block';
+    card.style.display = 'none';
+  } else {
+    box.style.display  = 'none';
+    card.style.display = 'block';
+    document.getElementById('lost-date').value = new Date().toISOString().split('T')[0];
+  }
+}
+
+async function submitLostItem() {
+  if (!currentUser) { openAuth('login'); return; }
+  const itemName = document.getElementById('lost-name').value.trim();
+  const desc     = document.getElementById('lost-desc').value.trim();
+  const cat      = document.getElementById('lost-cat-select').value;
+  const loc      = document.getElementById('lost-loc').value.trim();
+  const date     = document.getElementById('lost-date').value;
+  const msgEl    = document.getElementById('rl-msg');
+  const btn      = document.getElementById('btn-submit-lost');
+  msgEl.innerHTML = '';
+  if (!itemName || !desc || !cat) {
+    msgEl.innerHTML = '<div class="inline-msg error">Please fill in Item Name, Description, and Category.</div>';
+    return;
+  }
+
+  setBusy(btn, true, 'Submitting…');
+  try {
+    const photoURLs = await uploadPhotos(photoFiles.lost, document.getElementById('lost-upload-status'));
+    await db.collection('lostItems').add({
+      itemName, description: desc, category: cat, location: loc, dateLost: date,
+      photoURL: photoURLs[0] || '', photoURLs,
+      status: 'Pending', userId: currentUser.id, userName: currentUser.name, userEmail: currentUser.email,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    msgEl.innerHTML = '<div class="inline-msg success">✅ Submitted! Admin will review and approve your post shortly.</div>';
+    document.getElementById('lost-name').value = '';
+    document.getElementById('lost-desc').value = '';
+    document.getElementById('lost-loc').value  = '';
+    resetPhotos('lost');
+    showToast('Lost item reported!', 'success');
+  } catch (e) {
+    msgEl.innerHTML = `<div class="inline-msg error">❌ ${esc(e.message)}</div>`;
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════
+function openAuth(view) {
+  switchAuth(view);
+  document.getElementById('auth-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAuthModal(e) {
+  if (e.target.id === 'auth-modal') {
+    document.getElementById('auth-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+function switchAuth(view) {
+  ['login','register','forgot'].forEach(v => {
+    document.getElementById('view-'+v).style.display = v === view ? 'block' : 'none';
+  });
+}
+
+async function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const pass  = document.getElementById('li-pass').value;
+  const errEl = document.getElementById('li-err');
+  const btn   = document.getElementById('btn-login');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  setBusy(btn, true, 'Signing in…');
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    await waitForCurrentUser();
+    document.getElementById('auth-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    showToast('Welcome, ' + currentUser.name.split(' ')[0] + '! 👋', 'success');
+    if (currentUser.role === 'admin') showPage('admin'); else showPage('home');
+  } catch (e) {
+    errEl.textContent = friendlyAuthError(e);
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+async function doRegister() {
+  const name  = document.getElementById('rg-name').value.trim();
+  const email = document.getElementById('rg-email').value.trim();
+  const phone = document.getElementById('rg-phone').value.trim();
+  const pass  = document.getElementById('rg-pass').value;
+  const errEl = document.getElementById('rg-err');
+  const okEl  = document.getElementById('rg-ok');
+  const btn   = document.getElementById('btn-register');
+  errEl.textContent = ''; okEl.textContent = '';
+  if (!name || !email || !pass) { errEl.textContent = 'Please fill in all required fields.'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  setBusy(btn, true, 'Creating account…');
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({
+      name, email, phone, role: 'user', createdAt: FieldValue.serverTimestamp()
+    });
+    // onAuthStateChanged may have run before the profile doc existed — refresh it
+    currentUser = { id: cred.user.uid, name, email, phone, role: 'user' };
+    updateNav();
+    okEl.textContent = '✅ Account created! Welcome aboard.';
+    document.getElementById('auth-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    showToast('Welcome, ' + name.split(' ')[0] + '! 👋', 'success');
+  } catch (e) {
+    errEl.textContent = friendlyAuthError(e);
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('fp-email').value.trim();
+  const errEl = document.getElementById('fp-err');
+  const okEl  = document.getElementById('fp-ok');
+  const btn   = document.getElementById('btn-forgot');
+  errEl.textContent = ''; okEl.textContent = '';
+  if (!email) { errEl.textContent = 'Please enter your email address.'; return; }
+  setBusy(btn, true, 'Sending…');
+  try {
+    await auth.sendPasswordResetEmail(email);
+    okEl.textContent = '✅ Reset link sent! Check your email inbox.';
+  } catch (e) {
+    errEl.textContent = friendlyAuthError(e);
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+function logout() {
+  auth.signOut();
+  showPage('home');
+  showToast('Logged out.', 'success');
+}
+
+function friendlyAuthError(e) {
+  const code = e.code || '';
+  if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect email or password.';
+  if (code.includes('email-already-in-use')) return 'An account with this email already exists.';
+  if (code.includes('invalid-email')) return 'Please enter a valid email address.';
+  if (code.includes('weak-password')) return 'Password must be at least 6 characters.';
+  return e.message || 'Something went wrong. Try again.';
+}
+
+function waitForCurrentUser() {
+  return new Promise(resolve => {
+    const check = () => { if (currentUser) resolve(); else setTimeout(check, 50); };
+    check();
+  });
+}
+
+// Restores session on load / reacts to login-logout
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      const data = snap.data() || {};
+      currentUser = { id: user.uid, name: data.name || user.email, email: user.email, phone: data.phone || '', role: data.role || 'user' };
+    } catch (e) {
+      currentUser = { id: user.uid, name: user.email, email: user.email, phone: '', role: 'user' };
+    }
+  } else {
+    currentUser = null;
+  }
+  updateNav();
+  if (!window._bootedOnce) {
+    window._bootedOnce = true;
+    loadHome();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════════════════════
+async function loadProfile() {
+  if (!currentUser) { openAuth('login'); return; }
+  document.getElementById('p-name').textContent  = currentUser.name;
+  document.getElementById('p-email').textContent = currentUser.email;
+  document.getElementById('p-phone').textContent = currentUser.phone || '';
+  document.getElementById('p-avatar').textContent = initial(currentUser.name);
+  document.getElementById('edit-name').value  = currentUser.name;
+  document.getElementById('edit-phone').value = currentUser.phone || '';
+  loadMyPosts();
+  loadMyClaims();
+}
+
+function responseRowHTML(r) {
+  return `<div class="response-row">
+    <strong>${esc(r.finderName || 'Someone')}</strong> <span class="r-contact">· ${esc(fmtDate(r.createdAt))}</span>
+    <div class="r-contact">${r.finderEmail ? `<a href="mailto:${esc(r.finderEmail)}">${esc(r.finderEmail)}</a>` : ''}${r.finderPhone ? ' · ' + esc(r.finderPhone) : ''}</div>
+    <div class="r-msg">${esc(r.message || '')}</div>
+  </div>`;
+}
+
+async function loadMyPosts() {
+  const el = document.getElementById('posts-list');
+  el.innerHTML = spinnerBlock('Loading…');
+  try {
+    const { foundItems, lostItems, responses } = await track(async () => {
+      const [foundSnap, lostSnap, respSnap] = await Promise.all([
+        db.collection('foundItems').where('submittedBy', '==', currentUser.id).get(),
+        db.collection('lostItems').where('userId', '==', currentUser.id).get(),
+        db.collection('foundResponses').where('ownerUserId', '==', currentUser.id).get().catch(() => null)
+      ]);
+      return {
+        foundItems: mapDocs(foundSnap).sort(byNewest('createdAt')),
+        lostItems:  mapDocs(lostSnap).sort(byNewest('createdAt')),
+        responses:  respSnap ? mapDocs(respSnap).sort(byNewest('createdAt')) : []
+      };
+    });
+
+    if (!lostItems.length && !foundItems.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><h3>No posts yet</h3><p>Report a lost or found item to see your posts here.</p></div>';
+      return;
+    }
+
+    let html = '';
+    if (foundItems.length) {
+      html += `<p style="font-size:0.8rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Found Items Submitted</p>`;
+      html += foundItems.map(i => `
+        <div class="history-item">
+          <div class="history-icon found">📦</div>
+          <div class="history-info"><h4>${esc(i.itemName||'Unknown')}</h4><p>${esc(i.location||'')} · ${esc(fmtDate(i.createdAt))}</p></div>
+          <span class="history-status ${statusClass(i.status)}">${esc(i.status||'Pending')}</span>
+          <button class="btn-delete-item" onclick="deleteMyFoundPost('${i.id}',this)">🗑 Delete</button>
+        </div>`).join('');
+    }
+    if (lostItems.length) {
+      html += `<p style="font-size:0.8rem;color:var(--text3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Lost Items Reported</p>`;
+      html += lostItems.map(i => {
+        const rs = responses.filter(r => r.lostItemId === i.id);
+        return `<div class="history-block${rs.length ? ' has-responses' : ''}">
+          <div class="history-item">
+            <div class="history-icon lost">🔎</div>
+            <div class="history-info">
+              <h4>${esc(i.itemName||'Unknown')}</h4>
+              <p>${esc(i.category||'')} · ${esc(i.location||'')} · ${esc(fmtDate(i.dateLost))}</p>
+            </div>
+            <span class="history-status ${statusClass(i.status)}">${esc(i.status||'Pending')}</span>
+            ${i.status === 'Approved' ? `<button class="btn-found-it" onclick="markLostResolved('${i.id}',this)">✅ Mark as Found</button>` : ''}
+            <button class="btn-delete-item" onclick="deleteMyPost('${i.id}',this)">🗑 Delete</button>
+          </div>
+          ${rs.length ? `<div class="responses-box"><div class="responses-title">👋 ${rs.length} ${rs.length === 1 ? 'person says' : 'people say'} they found this</div>${rs.map(responseRowHTML).join('')}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+    el.innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = errorBlock('loadMyPosts', 'Could not load posts');
+  }
+}
+
+async function deleteMyPost(itemID, btn) {
+  if (!confirm('Delete this lost item post?')) return;
+  setBusy(btn, true, 'Deleting…');
+  try {
+    await db.collection('lostItems').doc(itemID).delete();
+    try { // tidy up responses to this report (ignored if rules disallow)
+      const rs = await db.collection('foundResponses').where('lostItemId', '==', itemID).where('ownerUserId', '==', currentUser.id).get();
+      await Promise.all(rs.docs.map(d => d.ref.delete()));
+    } catch (e) { console.warn(e); }
+    showToast('Post deleted.', 'success');
+    btn.closest('.history-block').remove();
+  } catch (e) { setBusy(btn, false); showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function deleteMyFoundPost(itemID, btn) {
+  if (!confirm('Delete this found item post?')) return;
+  setBusy(btn, true, 'Deleting…');
+  try {
+    await db.collection('foundItems').doc(itemID).delete();
+    await deletePendingClaimsFor(itemID, currentUser.id);
+    showToast('Post deleted.', 'success');
+    btn.closest('.history-item').remove();
+  } catch (e) { setBusy(btn, false); showToast('Failed: ' + e.message, 'error'); }
+}
+
+// Remove Pending claims left pointing at a deleted found item
+async function deletePendingClaimsFor(itemId, finderUid) {
+  try {
+    let q = db.collection('claims').where('foundItemId', '==', itemId);
+    if (finderUid) q = q.where('finderUserID', '==', finderUid);
+    const snap = await q.get();
+    const pending = snap.docs.filter(d => d.data().status === 'Pending');
+    if (!pending.length) return;
+    const batch = db.batch();
+    pending.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  } catch (e) { console.warn('Could not clean up claims', e); }
+}
+
+async function markLostResolved(itemID, btn) {
+  if (!confirm('Mark this item as found? It will leave the public list after ' + CLAIMED_VISIBLE_DAYS + ' days.')) return;
+  setBusy(btn, true, 'Saving…');
+  try {
+    await db.collection('lostItems').doc(itemID).update({ status: 'Resolved', resolvedAt: FieldValue.serverTimestamp() });
+    showToast('Marked as found. 🎉', 'success');
+    loadMyPosts();
+  } catch (e) { setBusy(btn, false); showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function loadMyClaims() {
+  const el = document.getElementById('claims-list');
+  el.innerHTML = spinnerBlock('Loading…');
+  try {
+    const claims = await track(async () => {
+      const snap = await db.collection('claims').where('claimantUserID', '==', currentUser.id).get();
+      return mapDocs(snap).sort(byNewest('claimedAt'));
+    });
+    if (!claims.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><h3>No claims yet</h3><p>Browse found items and submit a claim if you see yours.</p></div>';
+      return;
+    }
+    el.innerHTML = claims.map(c => `
+      <div class="history-item">
+        <div class="history-icon claim">✅</div>
+        <div class="history-info">
+          <h4>${esc(c.itemName||'Unknown')}</h4>
+          <p>${esc(c.message||'No message')} · ${esc(fmtDate(c.claimedAt))}</p>
+        </div>
+        <span class="history-status ${statusClass(c.status)}">${esc(c.status||'Pending')}</span>
+      </div>`).join('');
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = errorBlock('loadMyClaims', 'Could not load claims');
+  }
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+async function saveProfile() {
+  const name  = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim();
+  const msgEl = document.getElementById('edit-msg');
+  const btn   = document.getElementById('btn-save-profile');
+  if (!name) { msgEl.innerHTML = '<div class="inline-msg error">Name cannot be empty.</div>'; return; }
+  setBusy(btn, true, 'Saving…');
+  try {
+    await db.collection('users').doc(currentUser.id).update({ name, phone });
+    currentUser.name = name; currentUser.phone = phone;
+    updateNav();
+    document.getElementById('p-name').textContent = name;
+    document.getElementById('p-phone').textContent = phone;
+    msgEl.innerHTML = '<div class="inline-msg success">✅ Profile updated!</div>';
+    showToast('Profile saved!', 'success');
+  } catch (e) {
+    msgEl.innerHTML = '<div class="inline-msg error">❌ Failed to save.</div>';
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN — shared helpers
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_LOADERS = {
+  'dashboard':     () => loadAdminDashboard(),
+  'pending-found': () => loadAdminPendingFound(),
+  'pending-lost':  () => loadAdminPendingLost(),
+  'all-found':     () => loadAdminAllFound(),
+  'all-lost':      () => loadAdminAllLost(),
+  'claims':        () => loadAdminClaims(),
+  'responses':     () => loadAdminResponses(),
+  'users':         () => loadAdminUsers()
+};
+
+function switchAdmin(panel, btn) {
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('admin-'+panel).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (ADMIN_LOADERS[panel]) ADMIN_LOADERS[panel]();
+}
+
+// Reload whichever admin table is open (and refresh sidebar badges)
+function reloadAdmin() {
+  const p = document.querySelector('.admin-panel.active');
+  if (!p) return;
+  const key = p.id.replace('admin-', '');
+  if (ADMIN_LOADERS[key]) ADMIN_LOADERS[key]();
+  if (key !== 'dashboard') loadAdminDashboard(true);
+}
+
+// Generic table loader: spinner → rows / empty / error+retry
+async function loadTable(tbodyId, cols, retryFn, fetcher, rowFn, emptyText) {
+  tableSpinner(tbodyId, cols);
+  try {
+    const rows = await track(fetcher);
+    document.getElementById(tbodyId).innerHTML = rows.length
+      ? rows.map(rowFn).join('')
+      : `<tr><td colspan="${cols}" class="tbl-state">${emptyText}</td></tr>`;
+  } catch (e) {
+    console.error(e);
+    tableError(tbodyId, cols, retryFn);
+  }
+}
+
+// Items shown in admin tables, kept so the photo viewer can open them
+window._adminItems = {};
+function registerAdmin(kind, items) {
+  items.forEach(i => { window._adminItems[kind + ':' + i.id] = i; });
+  return items;
+}
+
+function photoCell(kind, i) {
+  const photos = getPhotos(i);
+  const icon = kind === 'found' ? '📦' : '🔎';
+  return `<td><div class="thumb-wrap" title="View photos and details" onclick="openAdminViewer('${kind}','${esc(i.id)}')">
+    ${photos[0] ? `<img class="tbl-thumb" src="${esc(photos[0])}" alt="" onerror="imgFail(this,'tbl-thumb-ph','${icon}')">` : `<div class="tbl-thumb-ph">${icon}</div>`}
+    ${photos.length > 1 ? `<span class="thumb-count">${photos.length}</span>` : ''}
+  </div></td>`;
+}
+
+// Large view of an item (all photos + details) for the admin
+function openAdminViewer(kind, id) {
+  const item = window._adminItems[kind + ':' + id];
+  if (!item) return;
+  const isFound = kind === 'found';
+  const rows = isFound ? [
+    ['📍 Found at', item.location || '—'],
+    ['📅 Date Found', fmtDate(item.dateFound || item.createdAt)],
+    ['🙋 Finder', item.finderName || '—'],
+    ['✉️ Email', item.finderEmail || '—'],
+    ['📞 Phone', item.finderPhone || '—']
+  ] : [
+    ['🏷 Category', item.category || '—'],
+    ['📍 Lost at', item.location || '—'],
+    ['📅 Date Lost', fmtDate(item.dateLost || item.createdAt)],
+    ['🙋 Reporter', item.userName || '—'],
+    ['✉️ Email', item.userEmail || '—']
+  ];
+  openModalWith(`
+    ${galleryHTML(getPhotos(item), isFound ? '📦' : '🔎')}
+    <div class="modal-body">
+      <div class="modal-category">${isFound ? '📦 Found Item' : '🔎 Lost Item'} · ${pill(item.status)}</div>
+      <div class="modal-title">${esc(item.itemName || 'Unknown')}</div>
+      <div class="modal-desc">${esc(item.description || 'No description.')}</div>
+      <div class="modal-info">
+        ${rows.map(r => `<div class="modal-row"><span class="modal-label">${r[0]}</span><span class="modal-value">${esc(r[1])}</span></div>`).join('')}
+      </div>
+      <div class="modal-actions"><button class="btn-modal-close" onclick="closeItemModalBtn()">Close</button></div>
+    </div>`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN — loaders
+// ═══════════════════════════════════════════════════════════════
+async function loadAdminDashboard(silent) {
+  const ids = ['a-found','a-lost','a-pfound','a-plost','a-users','a-pclaims','a-aclaims'];
+  if (!silent) ids.forEach(id => { document.getElementById(id).innerHTML = '<span class="mini-spinner"></span>'; });
+  try {
+    await track(async () => {
+      const [foundSnap, lostSnap, usersSnap, claimsSnap] = await Promise.all([
+        db.collection('foundItems').get(),
+        db.collection('lostItems').get(),
+        db.collection('users').get(),
+        db.collection('claims').get()
+      ]);
+      const found  = foundSnap.docs.map(d => d.data());
+      const lost   = lostSnap.docs.map(d => d.data());
+      const claims = claimsSnap.docs.map(d => d.data());
+      const pFound = found.filter(i => i.status === 'Pending').length;
+      const pLost  = lost.filter(i => i.status === 'Pending').length;
+      document.getElementById('a-found').textContent   = found.length;
+      document.getElementById('a-lost').textContent    = lost.length;
+      document.getElementById('a-pfound').textContent  = pFound;
+      document.getElementById('a-plost').textContent   = pLost;
+      document.getElementById('a-users').textContent   = usersSnap.size;
+      document.getElementById('a-pclaims').textContent = claims.filter(c => c.status === 'Pending').length;
+      document.getElementById('a-aclaims').textContent = claims.filter(c => c.status === 'Approved').length;
+      document.getElementById('badge-pfound').textContent = pFound;
+      document.getElementById('badge-plost').textContent  = pLost;
+    });
+  } catch (e) {
+    console.error(e);
+    if (!silent) ids.forEach(id => { document.getElementById(id).innerHTML = '<span class="stat-error" title="Retry" onclick="loadAdminDashboard()">↻</span>'; });
+  }
+}
+
+function loadAdminPendingFound() {
+  return loadTable('tb-pending-found', 7, 'loadAdminPendingFound',
+    async () => registerAdmin('found', mapDocs(await db.collection('foundItems').where('status', '==', 'Pending').get()).sort(byNewest('createdAt'))),
+    i => `<tr>
+      <td><strong>${esc(i.itemName||'Unknown')}</strong></td>
+      ${photoCell('found', i)}
+      <td style="color:var(--text2);">${esc(i.location||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.finderName||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.finderEmail||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(i.createdAt))}</td>
+      <td><div class="action-btns">
+        <button class="btn-sm btn-approve" onclick="adminApproveFound('${i.id}',this)">✅ Approve</button>
+        <button class="btn-sm btn-reject"  onclick="adminRejectFound('${i.id}',this)">❌ Reject</button>
+      </div></td>
+    </tr>`,
+    'No pending found items 🎉');
+}
+
+function loadAdminPendingLost() {
+  return loadTable('tb-pending-lost', 7, 'loadAdminPendingLost',
+    async () => registerAdmin('lost', mapDocs(await db.collection('lostItems').where('status', '==', 'Pending').get()).sort(byNewest('createdAt'))),
+    i => `<tr>
+      <td><strong>${esc(i.itemName||'Unknown')}</strong></td>
+      ${photoCell('lost', i)}
+      <td style="color:var(--text2);">${esc(i.category||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.location||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.userName||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(i.dateLost))}</td>
+      <td><div class="action-btns">
+        <button class="btn-sm btn-approve" onclick="adminApproveLost('${i.id}',this)">✅ Approve</button>
+        <button class="btn-sm btn-reject"  onclick="adminRejectLost('${i.id}',this)">❌ Reject</button>
+      </div></td>
+    </tr>`,
+    'No pending lost items 🎉');
+}
+
+function loadAdminAllFound() {
+  return loadTable('tb-all-found', 7, 'loadAdminAllFound',
+    async () => registerAdmin('found', mapDocs(await db.collection('foundItems').get()).sort(byNewest('createdAt'))),
+    i => `<tr>
+      <td><strong>${esc(i.itemName||'Unknown')}</strong></td>
+      ${photoCell('found', i)}
+      <td style="color:var(--text2);">${esc(i.location||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.finderName||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(i.createdAt))}</td>
+      <td>${pill(i.status)}</td>
+      <td><div class="action-btns">
+        ${i.status === 'Pending' ? `<button class="btn-sm btn-approve" onclick="adminApproveFound('${i.id}',this)">Approve</button>` : ''}
+        <button class="btn-sm btn-delete" onclick="adminDeleteFound('${i.id}',this)">Delete</button>
+      </div></td>
+    </tr>`,
+    'No found items yet.');
+}
+
+function loadAdminAllLost() {
+  return loadTable('tb-all-lost', 7, 'loadAdminAllLost',
+    async () => registerAdmin('lost', mapDocs(await db.collection('lostItems').get()).sort(byNewest('createdAt'))),
+    i => `<tr>
+      <td><strong>${esc(i.itemName||'Unknown')}</strong></td>
+      ${photoCell('lost', i)}
+      <td style="color:var(--text2);">${esc(i.category||'—')}</td>
+      <td style="color:var(--text2);">${esc(i.userName||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(i.dateLost))}</td>
+      <td>${pill(i.status)}</td>
+      <td><div class="action-btns">
+        ${i.status === 'Pending' ? `<button class="btn-sm btn-approve" onclick="adminApproveLost('${i.id}',this)">Approve</button>` : ''}
+        <button class="btn-sm btn-delete" onclick="adminDeleteLost('${i.id}',this)">Delete</button>
+      </div></td>
+    </tr>`,
+    'No lost items yet.');
+}
+
+function loadAdminClaims() {
+  return loadTable('tb-claims', 6, 'loadAdminClaims',
+    async () => mapDocs(await db.collection('claims').get()).sort(byNewest('claimedAt')),
+    c => `<tr>
+      <td><strong>${esc(c.claimantName||'—')}</strong></td>
+      <td>${esc(c.itemName||'—')}</td>
+      <td style="color:var(--text2);max-width:220px;">${esc(c.message||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(c.claimedAt))}</td>
+      <td>${pill(c.status)}</td>
+      <td><div class="action-btns">
+        ${c.status === 'Pending' ? `
+          <button class="btn-sm btn-claim-approve" onclick="adminClaimStatus('${c.id}','Approved',this)">Approve</button>
+          <button class="btn-sm btn-reject" onclick="adminClaimStatus('${c.id}','Rejected',this)">Reject</button>` : ''}
+        <button class="btn-sm btn-delete" onclick="adminDeleteClaim('${c.id}',this)">Delete</button>
+      </div></td>
+    </tr>`,
+    'No claims yet.');
+}
+
+function loadAdminResponses() {
+  return loadTable('tb-responses', 7, 'loadAdminResponses',
+    async () => mapDocs(await db.collection('foundResponses').get()).sort(byNewest('createdAt')),
+    r => `<tr>
+      <td><strong>${esc(r.finderName||'—')}</strong><div style="color:var(--text2);font-size:0.78rem;">${esc(r.finderEmail||'')}</div></td>
+      <td>${esc(r.itemName||'—')}</td>
+      <td style="color:var(--text2);">${esc(r.ownerName||'—')}</td>
+      <td style="color:var(--text2);max-width:240px;">${esc(r.message||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(r.createdAt))}</td>
+      <td>${r.emailSent ? '<span class="status-pill status-approved">Sent</span>' : '<span class="status-pill status-rejected">Not sent</span>'}</td>
+      <td><button class="btn-sm btn-delete" onclick="adminDeleteResponse('${r.id}',this)">Delete</button></td>
+    </tr>`,
+    'No finder responses yet.');
+}
+
+function loadAdminUsers() {
+  return loadTable('tb-users', 5, 'loadAdminUsers',
+    async () => mapDocs(await db.collection('users').get()).sort(byNewest('createdAt')),
+    u => `<tr>
+      <td><strong>${esc(u.name)}</strong> ${u.role==='admin'?'<span class="pending-badge" style="background:var(--cyan-dim);color:var(--cyan);">admin</span>':''}</td>
+      <td style="color:var(--text2);">${esc(u.email)}</td>
+      <td style="color:var(--text2);">${esc(u.phone||'—')}</td>
+      <td style="color:var(--text2);">${esc(fmtDate(u.createdAt))}</td>
+      <td><button class="btn-sm btn-delete" onclick="adminDeleteUser('${u.id}',this)">Delete</button></td>
+    </tr>`,
+    'No users registered yet.');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN — actions
+// ═══════════════════════════════════════════════════════════════
+async function adminAction(btn, busyLabel, fn, okMsg) {
+  setBusy(btn, true, busyLabel);
+  try {
+    await fn();
+    showToast(okMsg, 'success');
+    reloadAdmin();
+  } catch (e) {
+    setBusy(btn, false);
+    showToast('Failed: ' + e.message, 'error');
+  }
+}
+
+// found items
+function adminApproveFound(id, btn) {
+  return adminAction(btn, 'Approving…', () => db.collection('foundItems').doc(id).update({ status: 'Approved' }), 'Approved!');
+}
+function adminRejectFound(id, btn) {
+  if (!confirm('Reject and permanently delete this found item?')) return;
+  return adminAction(btn, 'Rejecting…', () => db.collection('foundItems').doc(id).delete(), 'Rejected & deleted.');
+}
+function adminDeleteFound(id, btn) {
+  if (!confirm('Delete this found item permanently?')) return;
+  return adminAction(btn, 'Deleting…', async () => {
+    await db.collection('foundItems').doc(id).delete();
+    await deletePendingClaimsFor(id, null);
+  }, 'Deleted.');
+}
+
+// lost items
+function adminApproveLost(id, btn) {
+  return adminAction(btn, 'Approving…', () => db.collection('lostItems').doc(id).update({ status: 'Approved' }), 'Approved!');
+}
+function adminRejectLost(id, btn) {
+  if (!confirm('Reject and permanently delete this lost item?')) return;
+  return adminAction(btn, 'Rejecting…', () => db.collection('lostItems').doc(id).delete(), 'Rejected & deleted.');
+}
+function adminDeleteLost(id, btn) {
+  if (!confirm('Delete this lost item permanently?')) return;
+  return adminAction(btn, 'Deleting…', () => db.collection('lostItems').doc(id).delete(), 'Deleted.');
+}
+
+// claims — approving marks the item Claimed, rejects the other pending claims, then emails the approved claimant only
+async function adminClaimStatus(claimId, status, btn) {
+  setBusy(btn, true, status === 'Approved' ? 'Approving…' : 'Rejecting…');
+  try {
+    const claimRef  = db.collection('claims').doc(claimId);
+    const claim     = (await claimRef.get()).data();
+    if (!claim) throw new Error('Claim not found.');
+
+    if (status === 'Rejected') {
+      await claimRef.update({ status: 'Rejected' });
+      showToast('Claim rejected.', 'success');
+      reloadAdmin();
+      return;
+    }
+
+    const itemRef  = db.collection('foundItems').doc(claim.foundItemId);
+    const itemSnap = await itemRef.get();
+    if (!itemSnap.exists) throw new Error('The found item no longer exists.');
+    const item = itemSnap.data();
+    if (item.status === 'Claimed') {
+      showToast('Another claim was already approved for this item.', 'error');
+      reloadAdmin();
+      return;
+    }
+
+    const others = await db.collection('claims').where('foundItemId', '==', claim.foundItemId).get();
+    const batch = db.batch();
+    batch.update(claimRef, { status: 'Approved' });
+    batch.update(itemRef, { status: 'Claimed', claimedAt: FieldValue.serverTimestamp(), claimedBy: claim.claimantUserID || '' });
+    others.docs.forEach(d => { if (d.id !== claimId && d.data().status === 'Pending') batch.update(d.ref, { status: 'Rejected' }); });
+    await batch.commit();
+
+    let mailOk = false, mailErr = '';
+    try {
+      const r = await sendClaimApprovalEmail({
+        claimantEmail: claim.claimantEmail || '',
+        claimantName:  claim.claimantName || '',
+        itemName:      claim.itemName || '',
+        finderName:    item.finderName || '',
+        finderEmail:   item.finderEmail || '',
+        finderPhone:   item.finderPhone || ''
+      });
+      mailOk = !!r.success; mailErr = r.error || '';
+    } catch (e) { mailErr = e.message; }
+
+    if (mailOk) showToast('Claim approved and email sent.', 'success');
+    else showToast('Claim approved, but email failed: ' + mailErr, 'error');
+    reloadAdmin();
+  } catch (e) {
+    setBusy(btn, false);
+    showToast('Failed: ' + e.message, 'error');
+  }
+}
+function adminDeleteClaim(claimId, btn) {
+  if (!confirm('Delete this claim permanently?')) return;
+  return adminAction(btn, 'Deleting…', () => db.collection('claims').doc(claimId).delete(), 'Claim deleted.');
+}
+
+// finder responses
+function adminDeleteResponse(id, btn) {
+  if (!confirm('Delete this finder response permanently?')) return;
+  return adminAction(btn, 'Deleting…', () => db.collection('foundResponses').doc(id).delete(), 'Response deleted.');
+}
+
+// users
+function adminDeleteUser(id, btn) {
+  if (!confirm("Delete this user's profile document? (Their login account is not deleted — that requires the Firebase console.)")) return;
+  return adminAction(btn, 'Deleting…', () => db.collection('users').doc(id).delete(), 'User profile deleted.');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════════════
+initCategorySelects();
+</script>
+</body>
+</html>
